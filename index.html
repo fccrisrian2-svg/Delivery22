@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="manifest" href="/Delivery22/manifest.json">
+    <title>App Delivery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f0f0f0;
+            font-weight: 700;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            font-weight: 700;
+        }
+
+        /* Mapa SVG */
+        #map, #map2 {
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #map svg, #map2 svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Barra superior fija */
+        .top-bar {
+            position: fixed;
+            top: 18px;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 18px;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .top-bar > * {
+            pointer-events: auto;
+        }
+
+        .menu-btn, .support-btn {
+            width: 56px;
+            height: 56px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            cursor: pointer;
+            border: none;
+            font-size: 26px;
+            color: #333;
+        }
+
+        .status-badge {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            background: #4CAF50;
+            border-radius: 50%;
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: 700;
+            color: #444;
+        }
+
+        /* Panel deslizable */
+        .sliding-panel {
+            position: fixed;
+            left: 0;
+            right: 0;
+            height: calc(100vh - 100px);
+            background: white;
+            border-radius: 20px 20px 0 0;
+            z-index: 50;
+            box-shadow: 0 -3px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-drag-area {
+            padding: 10px 0;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .panel-drag-area:active {
+            cursor: grabbing;
+        }
+
+        .handle-bar {
+            width: 45px;
+            height: 4px;
+            background: #bbb;
+            border-radius: 2px;
+            margin: 0 auto;
+        }
+
+        .panel-content {
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+            padding: 15px 20px 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Estilos del contenido */
+        .restaurant-name {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 0;
+            color: #000;
+            letter-spacing: -0.5px;
+        }
+
+        .order-count {
+            font-size: 22px;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .address {
+            font-size: 17px;
+            color: #222;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            font-weight: 700;
+        }
+
+        .company {
+            font-size: 17px;
+            color: #666;
+            font-weight: 700;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #e5e5e5;
+            margin-bottom: 20px;
+        }
+
+        .status-box {
+            background: #FFF9E6;
+            color: #D68910;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            text-align: center;
+            display: inline-block;
+            margin-right: auto;
+        }
+
+        .status-box.ready {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .phone-box {
+            border: 1.5px solid #F4A7B9;
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 11px 16px;
+            margin-bottom: 14px;
+            display: inline-flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 85%;
+        }
+
+        .phone-number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #000;
+            letter-spacing: -0.5px;
+        }
+
+        .phone-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #D81B60;
+            background: none;
+        }
+
+        .customer-info {
+            font-size: 17px;
+            margin-bottom: 10px;
+            color: #222;
+            font-weight: 700;
+        }
+
+        .products-toggle {
+            color: #D81B60;
+            font-size: 19px;
+            font-weight: 600;
+            text-align: right;
+            cursor: pointer;
+            padding: 10px 0;
+            margin-bottom: 15px;
+        }
+
+        .products-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s;
+            background: #f5f5f5;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .products-list.show {
+            max-height: 500px;
+            padding: 15px;
+        }
+
+        .product-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .payment-section {
+            padding: 18px 0;
+            border-top: 1px solid #e5e5e5;
+            border-bottom: 1px solid #e5e5e5;
+            margin-bottom: 18px;
+        }
+
+        .payment-label {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .payment-method {
+            font-size: 19px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .feedback-box {
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .feedback-question {
+            font-size: 17px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .emoji-options {
+            display: flex;
+            justify-content: center;
+            gap: 45px;
+        }
+
+        .emoji {
+            font-size: 65px;
+            cursor: pointer;
+            filter: grayscale(100%);
+            opacity: 0.35;
+            transition: all 0.2s;
+        }
+
+        .emoji.selected {
+            filter: grayscale(0%);
+            opacity: 1;
+        }
+
+        /* Botón confirmar inline (dentro del panel, visible al scrollear) */
+        .confirm-btn-inline {
+            display: block;
+            width: 100%;
+            background: #1C1C1E;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 18px;
+            font-size: 19px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        /* Botón confirmar fijo (ya no se usa, reemplazado por inline) */
+
+        /* Modal de confirmación */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #FFFFFF;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 370px;
+            padding: 32px 28px 24px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: none;
+        }
+
+        .modal-message {
+            color: #000000;
+            font-size: 32px;
+            font-weight: 800;
+            text-align: left;
+            padding: 0 0 28px;
+            line-height: 1.2;
+        }
+
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            border-top: none;
+        }
+
+        .modal-btn {
+            flex: none;
+            background: none;
+            border: none;
+            font-size: 17px;
+            padding: 0;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .modal-btn.confirm {
+            background: #1C1C1E;
+            color: white;
+            border-radius: 50px;
+            padding: 18px;
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .modal-btn.skip {
+            color: #D81B60;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 8px;
+            background: none;
+        }
+
+        /* Menú lateral */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 150;
+            display: none;
+        }
+
+        .menu-overlay.show {
+            display: block;
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 85%;
+            max-width: 360px;
+            height: 100%;
+            background: white;
+            z-index: 151;
+            transition: left 0.3s;
+            overflow-y: auto;
+            padding: 25px 20px;
+        }
+
+        .side-menu.open {
+            left: 0;
+        }
+
+        .menu-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .menu-section {
+            margin-bottom: 20px;
+        }
+
+        .menu-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-input, .menu-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .save-btn {
+            width: 100%;
+            background: #D81B60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        /* Pantalla 2 */
+        .screen-2 {
+            display: none;
+        }
+
+        .screen-2.active {
+            display: block;
+        }
+
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .customer-name {
+            font-size: 34px;
+            font-weight: 700;
+            color: #000;
+            line-height: 1.1;
+            flex: 1;
+            letter-spacing: -0.5px;
+            margin-bottom: 18px;
+        }
+
+        .contact-icons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .contact-icon {
+            width: 52px;
+            height: 52px;
+            border: 2px solid #FCE4EC;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .apartment-info {
+            font-size: 17px;
+            color: #222;
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal de confirmación -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <div class="modal-header"></div>
+            <div class="modal-message" id="modalMessage">¿Confirmas que retiraste el pedido 1955237703?</div>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" onclick="acceptModal()">Confirmar Retiro</button>
+                <button class="modal-btn skip" onclick="cancelModal()">Saltar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay menú -->
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+    <!-- Menú lateral -->
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-header">Configuración</div>
+        
+        <div class="menu-section">
+            <div class="menu-label">Nombre del Restaurante</div>
+            <input type="text" class="menu-input" id="editRestaurantName">
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Dirección del Restaurante</div>
+            <input type="text" class="menu-input" id="editAddress">
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Empresa</div>
+            <input type="text" class="menu-input" id="editCompany">
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Pedido</div>
+            <input type="text" class="menu-input" id="editPhone">
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Número de Orden</div>
+            <input type="text" class="menu-input" id="editOrderNum">
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Nombre del Cliente</div>
+            <input type="text" class="menu-input" id="editCustomer">
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Estado del Pedido</div>
+            <select class="menu-select" id="editStatus">
+                <option value="pending">Listo en aproximadamente...</option>
+                <option value="soon">Estará listo pronto</option>
+                <option value="ready">Listo</option>
+            </select>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Cantidad de Productos</div>
+            <input type="number" class="menu-input" id="editProducts" min="1">
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Método de Pago</div>
+            <select class="menu-select" id="editPayment">
+                <option value="local">No pagar en el local</option>
+                <option value="online">Pago online</option>
+            </select>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Dirección Cliente (Pantalla 2)</div>
+            <input type="text" class="menu-input" id="editCustomerAddr">
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Apartamento</div>
+            <input type="text" class="menu-input" id="editApartment">
+        </div>
+
+        <button class="save-btn" onclick="saveConfig()">Guardar Cambios</button>
+    </div>
+
+    <!-- PANTALLA 1 -->
+    <div class="screen-1" id="screen1">
+        <div id="map">
+            <svg viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                <!-- Fondo base -->
+                <rect width="400" height="520" fill="#ede9e3"/>
+
+                <!-- Manzanas -->
+                <rect x="0" y="0" width="173" height="148" fill="#dedad4"/>
+                <rect x="207" y="0" width="193" height="148" fill="#dedad4"/>
+                <rect x="0" y="182" width="173" height="136" fill="#dedad4"/>
+                <rect x="207" y="182" width="193" height="136" fill="#dedad4"/>
+                <rect x="0" y="352" width="173" height="168" fill="#dedad4"/>
+                <rect x="207" y="352" width="193" height="168" fill="#dedad4"/>
+
+                <!-- Calles horizontales -->
+                <rect x="0" y="148" width="400" height="34" fill="#f5f2ee"/>
+                <rect x="0" y="318" width="400" height="34" fill="#f5f2ee"/>
+
+                <!-- Calles verticales -->
+                <rect x="173" y="0" width="34" height="520" fill="#f5f2ee"/>
+
+                <!-- ====== MARCADOR RESTAURANTE ====== -->
+                <line x1="130" y1="188" x2="130" y2="198" stroke="#333" stroke-width="1.8"/>
+                <circle cx="130" cy="200" r="3.5" fill="white" stroke="#333" stroke-width="1.5"/>
+                <circle cx="130" cy="176" r="14" fill="#E91E63"/>
+                <!-- local solo lineas blancas sin relleno -->
+                <rect x="122" y="167" width="16" height="4" fill="none" stroke="white" stroke-width="1.4"/>
+                <rect x="123" y="171" width="14" height="9" fill="none" stroke="white" stroke-width="1.4"/>
+                <line x1="123" y1="174" x2="137" y2="174" stroke="white" stroke-width="1"/>
+                <rect x="127" y="175" width="5" height="5" fill="none" stroke="white" stroke-width="1"/>
+
+                <!-- ====== PUNTO AZUL GPS ====== -->
+                <circle cx="250" cy="270" r="20" fill="rgba(66,133,244,0.15)"/>
+                <circle cx="250" cy="270" r="10" fill="#4285F4"/>
+                <circle cx="250" cy="270" r="10" fill="none" stroke="white" stroke-width="2.5"/>
+            </svg>
+        </div>
+
+        <div class="top-bar">
+            <button class="menu-btn" onclick="openMenu()">☰</button>
+            <div class="status-badge">
+                <div style="display:flex;flex-direction:column;align-items:center;line-height:1.1;">
+                    <div style="font-size:11px;color:#888;font-weight:700;">Estado</div>
+                    <div style="font-size:15px;font-weight:700;color:#111;">Repartie...</div>
+                </div>
+                <div class="status-dot" style="margin-left:6px;"></div>
+            </div>
+            <button class="support-btn">🎧</button>
+        </div>
+
+        <div class="sliding-panel" id="panel1">
+            <div class="panel-drag-area" id="dragArea1">
+                <div class="handle-bar"></div>
+            </div>
+            <div class="panel-content">
+                <div class="restaurant-name" id="restName">El Rosarino</div>
+                <div class="order-count">1 pedido</div>
+                <div class="address" id="restAddr">BORDABEHERE 3605 - , 2000, Rosario</div>
+                <div class="company" id="company">Empresa: El Rosarino</div>
+
+                <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                <div class="status-box" id="statusBox">Listo en aproximadamente...</div>
+
+                <div class="phone-box">
+                    <div class="phone-number" id="phoneNum">1955237703</div>
+                <div class="phone-arrow">↗</div>
+                </div>
+                </div>
+
+                <div class="customer-info" id="custInfo">1955237703 - #8799 - Lucho Aguzzi</div>
+
+                <div class="products-toggle" onclick="toggleProducts()">
+                    <span id="prodCount">2</span> productos ▼
+                </div>
+
+                <div class="products-list" id="prodList">
+                    <div class="product-item">
+                        <div>Producto ejemplo 1</div>
+                        <div style="font-size:14px;color:#666;">Cantidad: 1</div>
+                    </div>
+                </div>
+
+                <div class="payment-section">
+                    <div class="payment-label">Pago</div>
+                    <div class="payment-method" id="payMethod">No pagar en el local</div>
+                </div>
+
+                <div class="feedback-box">
+                    <div class="feedback-question">¿Cómo es la experiencia de retiro?</div>
+                    <div class="emoji-options">
+                        <div class="emoji" onclick="selectEmoji(this)">😞</div>
+                        <div class="emoji" onclick="selectEmoji(this)">😀</div>
+                    </div>
+                </div>
+
+                <button class="confirm-btn-inline" onclick="showConfirmPickup()">Confirmar Retiro</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2 -->
+    <div class="screen-2" id="screen2">
+        <div id="map2">
+            <svg viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                <!-- Fondo base -->
+                <rect width="400" height="520" fill="#ede9e3"/>
+
+                <!-- Manzanas -->
+                <rect x="0" y="0" width="173" height="148" fill="#dedad4"/>
+                <rect x="207" y="0" width="193" height="148" fill="#dedad4"/>
+                <rect x="0" y="182" width="173" height="136" fill="#dedad4"/>
+                <rect x="207" y="182" width="193" height="136" fill="#dedad4"/>
+                <rect x="0" y="352" width="173" height="168" fill="#dedad4"/>
+                <rect x="207" y="352" width="193" height="168" fill="#dedad4"/>
+
+                <!-- Calles horizontales -->
+                <rect x="0" y="148" width="400" height="34" fill="#f5f2ee"/>
+                <rect x="0" y="318" width="400" height="34" fill="#f5f2ee"/>
+
+                <!-- Calles verticales -->
+                <rect x="173" y="0" width="34" height="520" fill="#f5f2ee"/>
+
+                <!-- ====== Marcador restaurante ====== -->
+                <line x1="130" y1="188" x2="130" y2="198" stroke="#333" stroke-width="1.8"/>
+                <circle cx="130" cy="200" r="3.5" fill="white" stroke="#333" stroke-width="1.5"/>
+                <!-- círculo rosa -->
+                <circle cx="130" cy="176" r="14" fill="#E91E63"/>
+                <!-- ícono local SOLO LÍNEAS BLANCAS, sin relleno, pequeño -->
+                <rect x="124" y="170" width="12" height="9" fill="none" stroke="white" stroke-width="1.3"/>
+                <rect x="122" y="167" width="16" height="4" fill="none" stroke="white" stroke-width="1.3"/>
+                <line x1="124" y1="171" x2="136" y2="171" stroke="white" stroke-width="1"/>
+                <rect x="127" y="174" width="5" height="5" fill="none" stroke="white" stroke-width="1"/>
+
+                <!-- Punto azul -->
+                <circle cx="250" cy="270" r="20" fill="rgba(66,133,244,0.15)"/>
+                <circle cx="250" cy="270" r="10" fill="#4285F4"/>
+                <circle cx="250" cy="270" r="10" fill="none" stroke="white" stroke-width="2.5"/>
+            </svg>
+        </div>
+
+        <div class="top-bar">
+            <button class="menu-btn" onclick="openMenu()">☰</button>
+            <div class="status-badge">
+                <div style="display:flex;flex-direction:column;align-items:center;line-height:1.1;">
+                    <div style="font-size:11px;color:#888;font-weight:700;">Estado</div>
+                    <div style="font-size:15px;font-weight:700;color:#111;">Repartie...</div>
+                </div>
+                <div class="status-dot" style="margin-left:6px;"></div>
+            </div>
+            <button class="support-btn">🎧</button>
+        </div>
+
+        <div class="sliding-panel" id="panel2">
+            <div class="panel-drag-area" id="dragArea2">
+                <div class="handle-bar"></div>
+            </div>
+            <div class="panel-content">
+                <div class="customer-header">
+                    <div class="customer-name" id="custName2">Lucho Aguzzi</div>
+                    <div class="contact-icons">
+                        <div class="contact-icon">📞</div>
+                        <div class="contact-icon">💬</div>
+                    </div>
+                </div>
+
+                <!-- Dirección grande -->
+                <div id="custAddr2" style="font-size:21px;font-weight:700;color:#111;line-height:1.35;margin-bottom:16px;padding-bottom:16px;border-bottom:1.5px solid #e0e0e0;">Tucumán 3820 , Rosario</div>
+
+                <!-- Apartamento/piso grande -->
+                <div id="aptInfo" style="font-size:19px;font-weight:400;color:#555;margin-bottom:16px;padding-bottom:16px;border-bottom:1.5px solid #e0e0e0;">Número de apartamento: 3er piso</div>
+
+                <!-- Número y datos del cliente -->
+                <div class="customer-info" style="font-size:18px;font-weight:700;color:#111;line-height:1.4;margin-bottom:12px;">
+                    1955198162<br>#9809 - Maria yamila Balquinta<br>Anajuana
+                </div>
+
+                <div class="products-toggle" onclick="toggleProducts2()">
+                    <span>5</span> productos ▼
+                </div>
+
+                <div class="products-list" id="prodList2">
+                    <div class="product-item">
+                        <div>Producto ejemplo</div>
+                    </div>
+                </div>
+
+                <div class="payment-section">
+                    <div class="payment-label">Pago</div>
+                    <div class="payment-method" id="payMethod2">Pago online</div>
+                </div>
+
+                <div style="font-size:17px;color:#222;margin-top:15px;">No puedo contactar al usuario</div>
+
+                <button class="confirm-btn-inline" onclick="showConfirmDelivery()" style="margin-top:25px;">Confirmar Entrega</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let config = {
+            restaurantName: 'El Rosarino',
+            address: 'BORDABEHERE 3605 - , 2000, Rosario',
+            company: 'El Rosarino',
+            phone: '1955237703',
+            orderNum: '#8799',
+            customer: 'Lucho Aguzzi',
+            status: 'pending',
+            products: 2,
+            payment: 'local',
+            customerAddr: 'Tucumán 3820 , Rosario',
+            apartment: '3er piso'
+        };
+
+        let currentAction;
+
+        // Inicializar
+        window.onload = function() {
+            setupDraggable('panel1', 'dragArea1');
+            setupDraggable('panel2', 'dragArea2');
+            loadConfig();
+            
+            // Posicionar panel inicialmente
+            const panel = document.getElementById('panel1');
+            panel.style.transform = 'translateY(55vh)';
+        };
+
+        function setupDraggable(panelId, dragAreaId) {
+            const panel = document.getElementById(panelId);
+            const content = panel.querySelector('.panel-content');
+            let startY, startTransform, isDragging;
+
+            function getTransformVh() {
+                const transform = panel.style.transform || 'translateY(55vh)';
+                const match = transform.match(/translateY\((.+?)vh\)/);
+                return match ? parseFloat(match[1]) : 55;
+            }
+
+            panel.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                startTransform = getTransformVh();
+                isDragging = false;
+                panel.style.transition = 'none';
+            }, { passive: true });
+
+            panel.addEventListener('touchmove', (e) => {
+                const deltaY = e.touches[0].clientY - startY;
+                const absDelta = Math.abs(deltaY);
+                const panelTop = getTransformVh();
+
+                // Si el panel está expandido y el contenido tiene scroll, dejar que scrollee normalmente
+                if (panelTop <= 8 && content.scrollTop > 0) return;
+                if (panelTop <= 8 && deltaY < 0 && content.scrollTop === 0 && content.scrollHeight > content.clientHeight) return;
+
+                if (!isDragging && absDelta > 6) isDragging = true;
+
+                if (isDragging) {
+                    e.preventDefault();
+                    const newTransform = startTransform + (deltaY / window.innerHeight * 100);
+                    panel.style.transform = `translateY(${Math.max(5, Math.min(85, newTransform))}vh)`;
+                }
+            }, { passive: false });
+
+            panel.addEventListener('touchend', () => {
+                panel.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                isDragging = false;
+            }, { passive: true });
+
+            panel.addEventListener('mousedown', (e) => {
+                startY = e.clientY;
+                startTransform = getTransformVh();
+                isDragging = false;
+                panel.style.transition = 'none';
+
+                const onMouseMove = (e) => {
+                    const deltaY = e.clientY - startY;
+                    if (!isDragging && Math.abs(deltaY) > 5) isDragging = true;
+                    if (isDragging) {
+                        const newTransform = startTransform + (deltaY / window.innerHeight * 100);
+                        panel.style.transform = `translateY(${Math.max(5, Math.min(85, newTransform))}vh)`;
+                    }
+                };
+
+                const onMouseUp = () => {
+                    panel.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                };
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        function openMenu() {
+            document.getElementById('sideMenu').classList.add('open');
+            document.getElementById('menuOverlay').classList.add('show');
+            
+            document.getElementById('editRestaurantName').value = config.restaurantName;
+            document.getElementById('editAddress').value = config.address;
+            document.getElementById('editCompany').value = config.company;
+            document.getElementById('editPhone').value = config.phone;
+            document.getElementById('editOrderNum').value = config.orderNum;
+            document.getElementById('editCustomer').value = config.customer;
+            document.getElementById('editStatus').value = config.status;
+            document.getElementById('editProducts').value = config.products;
+            document.getElementById('editPayment').value = config.payment;
+            document.getElementById('editCustomerAddr').value = config.customerAddr;
+            document.getElementById('editApartment').value = config.apartment;
+        }
+
+        function closeMenu() {
+            document.getElementById('sideMenu').classList.remove('open');
+            document.getElementById('menuOverlay').classList.remove('show');
+        }
+
+        function saveConfig() {
+            config.restaurantName = document.getElementById('editRestaurantName').value;
+            config.address = document.getElementById('editAddress').value;
+            config.company = document.getElementById('editCompany').value;
+            config.phone = document.getElementById('editPhone').value;
+            config.orderNum = document.getElementById('editOrderNum').value;
+            config.customer = document.getElementById('editCustomer').value;
+            config.status = document.getElementById('editStatus').value;
+            config.products = document.getElementById('editProducts').value;
+            config.payment = document.getElementById('editPayment').value;
+            config.customerAddr = document.getElementById('editCustomerAddr').value;
+            config.apartment = document.getElementById('editApartment').value;
+
+            localStorage.setItem('deliveryConfig', JSON.stringify(config));
+            loadConfig();
+            closeMenu();
+        }
+
+        function loadConfig() {
+            const saved = localStorage.getItem('deliveryConfig');
+            if (saved) config = JSON.parse(saved);
+
+            document.getElementById('restName').textContent = config.restaurantName;
+            document.getElementById('restAddr').textContent = config.address;
+            document.getElementById('company').textContent = 'Empresa: ' + config.company;
+            document.getElementById('phoneNum').textContent = config.phone;
+            document.getElementById('custInfo').textContent = config.phone + ' - ' + config.orderNum + ' - ' + config.customer;
+            document.getElementById('prodCount').textContent = config.products;
+
+            const statusBox = document.getElementById('statusBox');
+            if (config.status === 'ready') {
+                statusBox.textContent = 'Listo';
+                statusBox.className = 'status-box ready';
+            } else if (config.status === 'soon') {
+                statusBox.textContent = 'Estará listo pronto';
+                statusBox.className = 'status-box';
+            } else {
+                statusBox.textContent = 'Listo en aproximadamente...';
+                statusBox.className = 'status-box';
+            }
+
+            document.getElementById('payMethod').textContent = config.payment === 'online' ? 'Pago online' : 'No pagar en el local';
+            document.getElementById('custName2').textContent = config.customer;
+            document.getElementById('custAddr2').textContent = config.customerAddr;
+            document.getElementById('aptInfo').textContent = 'Número de apartamento: ' + config.apartment;
+            document.getElementById('payMethod2').textContent = config.payment === 'online' ? 'Pago online' : 'No pagar en el local';
+        }
+
+        function toggleProducts() {
+            document.getElementById('prodList').classList.toggle('show');
+        }
+
+        function toggleProducts2() {
+            document.getElementById('prodList2').classList.toggle('show');
+        }
+
+        function selectEmoji(el) {
+            document.querySelectorAll('.emoji').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function showConfirmPickup() {
+            currentAction = 'pickup';
+            document.getElementById('modalMessage').textContent = '¿Confirmas que retiraste el pedido ' + config.phone + '?';
+            document.getElementById('modalOverlay').classList.add('show');
+        }
+
+        function showConfirmDelivery() {
+            currentAction = 'delivery';
+            document.getElementById('modalMessage').textContent = '¿Confirmas que entregaste el pedido ' + config.phone + '?';
+            document.getElementById('modalOverlay').classList.add('show');
+        }
+
+        function cancelModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            currentAction = null;
+        }
+
+        function acceptModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+
+            if (currentAction === 'pickup') {
+                setTimeout(() => {
+                    document.getElementById('screen1').style.display = 'none';
+                    document.getElementById('screen2').classList.add('active');
+                    document.getElementById('panel2').style.transform = 'translateY(55vh)';
+                }, 500);
+            } else if (currentAction === 'delivery') {
+                setTimeout(() => {
+                    document.getElementById('screen2').classList.remove('active');
+                    document.getElementById('screen2').style.display = 'none';
+                    document.getElementById('screen1').style.display = 'block';
+                    document.getElementById('panel1').style.transform = 'translateY(55vh)';
+                }, 500);
+            }
+
+            currentAction = null;
+        }
+    </script>
+</body>
+</html>
