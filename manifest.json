@@ -1,0 +1,15 @@
+{
+  "name": "App Delivery",
+  "short_name": "Delivery",
+  "display": "standalone",
+  "start_url": "/Delivery22/index.html",
+  "background_color": "#ffffff",
+  "theme-color": "#ffffff",
+  "icons": [
+    {
+      "src": "https://fccrisrian2-svg.github.io/Delivery22/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
