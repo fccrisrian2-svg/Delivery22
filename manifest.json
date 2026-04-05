@@ -1,8 +1,0 @@
-{
-  "name": "App Delivery",
-  "short_name": "Delivery",
-  "display": "standalone",
-  "start_url": "/Delivery22/",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff"
-}
